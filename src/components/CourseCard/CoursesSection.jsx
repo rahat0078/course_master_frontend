@@ -38,6 +38,7 @@ export default function CoursesSection() {
             const res = await getCourses(params);
             setCourses(res.data.courses || []);
             setTotalPages(res.data.totalPages || 1);
+        // eslint-disable-next-line no-unused-vars
         } catch (err) {
             setError("Failed to load courses");
         } finally {
@@ -56,10 +57,7 @@ export default function CoursesSection() {
         fetchCourses();
     };
 
-    // reset page when filters change
-    useEffect(() => {
-        setPage(1);
-    }, [sort, category, tags]);
+
 
     return (
         <div className="space-y-6">
