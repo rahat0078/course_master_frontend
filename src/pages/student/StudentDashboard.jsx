@@ -198,10 +198,35 @@ export default function StudentDashboard() {
       ) : (
         <div className="space-y-4">
           {enrollments?.map((enrollment) => {
-            const courseId = enrollment.course?._id;
+            // ১. সেফলি courseId ও বিস্তারিত তথ্য বের করা (অবজেক্ট বা আইডি স্ট্রিং যাই হোক)
+            const courseId =
+              typeof enrollment.course === "object"
+                ? enrollment.course?._id
+                : enrollment.course;
+            const courseObj =
+              typeof enrollment.course === "object" ? enrollment.course : null;
             const isExpanded = expandedCourse === courseId;
             const stats = courseStats[courseId];
             const isLoading = loadingStats[courseId];
+
+            // ২. সিলেবাস ও মোট লেসন সংখ্যা সেফলি বের করা
+            const syllabus =
+              courseObj?.syllabus || stats?.courseData?.syllabus || [];
+            const totalLessons = syllabus.reduce(
+              (acc, m) => acc + (m.lessons?.length || 0),
+              0,
+            );
+            const completedCount =
+              enrollment.progress?.completedLessons?.length || 0;
+
+            // ৩. নিখুঁত প্রোগ্রেস পার্সেন্টেজ হিসাব
+            const calculatedPercent =
+              totalLessons > 0
+                ? Math.min(
+                    100,
+                    Math.round((completedCount / totalLessons) * 100),
+                  )
+                : enrollment.progress?.percent || 0;
 
             return (
               <div
@@ -277,26 +302,13 @@ export default function StudentDashboard() {
                       </div>
                       <div className="text-right">
                         <p className="text-2xl sm:text-3xl font-bold text-primary">
-                          {(() => {
-                            const completedCount =
-                              enrollment.progress?.completedLessons?.length ||
-                              0;
-                            const syllabus = stats?.courseData?.syllabus || [];
-
-                            const totalLessons = syllabus.reduce(
-                              (acc, m) => acc + (m.lessons?.length || 0),
-                              0,
-                            );
-
-                            if (totalLessons === 0) return "0%";
-                            return `${Math.round((completedCount / totalLessons) * 100)}%`;
-                          })()}
+                          {calculatedPercent}%
                         </p>
                       </div>
                     </div>
                     <progress
                       className="progress progress-primary w-full h-4"
-                      value={enrollment.progress?.percent || 0}
+                      value={calculatedPercent}
                       max="100"
                     ></progress>
                     {isExpanded && stats && (
